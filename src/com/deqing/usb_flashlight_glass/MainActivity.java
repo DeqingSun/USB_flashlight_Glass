@@ -156,7 +156,7 @@ public class MainActivity extends Activity {
 		    UsbDevice device = deviceIterator.next();
 		    total++;
 		    System.out.println("VID "+String.format("%04X", device.getVendorId())+" PID "+String.format("%04X", device.getProductId())+" NAME "+device.getDeviceName());
-		    if (device.getVendorId()==0x04D8 && device.getProductId()==0x0053){
+		    if (device.getVendorId()==0x4207 && device.getProductId()==0x20A0){
 		    	target_device=device;
 		    	break;
 		    }
