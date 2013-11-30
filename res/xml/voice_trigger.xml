@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<trigger keyword="@string/toggle_flashlight">
+<!--     <input prompt="@string/flashlight_prompt" /> -->
+</trigger>
