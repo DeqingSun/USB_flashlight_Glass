@@ -81,7 +81,7 @@
 #pragma config STVREN = ON      // Stack Overflow/Underflow Reset Enable (Stack Overflow or Underflow will cause a Reset)
 #pragma config BORV = LO        // Brown-out Reset Voltage Selection (Brown-out Reset Voltage (Vbor), low trip point selected.)
 #pragma config LPBOR = OFF      // Low-Power Brown Out Reset (Low-Power BOR is disabled)
-#pragma config LVP = OFF         // Low-Voltage Programming Enable (Low-voltage programming enabled)
+//#pragma config LVP = OFF         // Low-Voltage Programming Enable (Low-voltage programming enabled)
 
 unsigned char INPacket[USBGEN_EP_SIZE];		//User application buffer for sending IN packets to the host
 unsigned char OUTPacket[USBGEN_EP_SIZE];	//User application buffer for receiving and holding OUT packets sent from the host
@@ -273,7 +273,9 @@ void UserInit(void)
     //mInitAllLEDs();
     //mInitAllSwitches();//TODO
     TRISC = 0xF7;       //Set RC3 as output
-	blinkStatusValid = TRUE;	//Blink the normal USB state on the LEDs.
+    LATAbits.LATA4=1;   //off by default
+    TRISAbits.TRISA4 = 0; //RA4 OUT
+    blinkStatusValid = TRUE;	//Blink the normal USB state on the LEDs.
 
 }//end UserInit
 
@@ -341,6 +343,8 @@ void ProcessIO(void)
                 }*///TODO
                         
                         LATCbits.LATC3=!PORTCbits.RC3;
+                        LATAbits.LATA4=!PORTAbits.RA4;
+
                 break;
             case 0x81:  //Get push button state command from PC application.
 				//Now check to make sure no previous attempts to send data to the host are still pending.  If any attemps are still
