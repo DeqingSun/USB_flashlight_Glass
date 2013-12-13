@@ -164,7 +164,7 @@ ROM USB_DEVICE_DESCRIPTOR device_dsc=
 {
     0x12,                   // Size of this descriptor in bytes
     USB_DESCRIPTOR_DEVICE,  // DEVICE descriptor type
-    0x0200,                 // USB Spec Release Number in BCD format
+    0x0110,                 // USB Spec Release Number in BCD format
     0x00,                   // Class Code
     0x00,                   // Subclass code
     0x00,                   // Protocol code
@@ -205,15 +205,15 @@ ROM BYTE configDescriptor1[]={
     0x07,                       /*sizeof(USB_EP_DSC)*/
     USB_DESCRIPTOR_ENDPOINT,    //Endpoint Descriptor
     _EP01_OUT,                  //EndpointAddress
-    _BULK,                       //Attributes
-    USBGEN_EP_SIZE,0x00,        //size
+    _INTERRUPT,                       //Attributes
+    DESC_CONFIG_WORD(8),        //size
     1,                         //Interval
 
     0x07,                       /*sizeof(USB_EP_DSC)*/
     USB_DESCRIPTOR_ENDPOINT,    //Endpoint Descriptor
     _EP01_IN,                   //EndpointAddress
-    _BULK,                       //Attributes
-    USBGEN_EP_SIZE,0x00,        //size
+    _INTERRUPT,                       //Attributes
+    DESC_CONFIG_WORD(8),        //size
     1                          //Interval
 };
 

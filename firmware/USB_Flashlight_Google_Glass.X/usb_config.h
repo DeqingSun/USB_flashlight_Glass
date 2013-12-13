@@ -111,8 +111,8 @@
 //  is available on the target processor.
 //#define USB_TRANSCEIVER_OPTION USB_EXTERNAL_TRANSCEIVER
 
-#define USB_SPEED_OPTION USB_FULL_SPEED
-//#define USB_SPEED_OPTION USB_LOW_SPEED //(this mode is only supported on some microcontrollers)
+//#define USB_SPEED_OPTION USB_FULL_SPEED
+#define USB_SPEED_OPTION USB_LOW_SPEED //(this mode is only supported on some microcontrollers)
 
 //------------------------------------------------------------------------------------------------------------------
 //Option to enable auto-arming of the status stage of control transfers, if no
@@ -199,7 +199,7 @@
 /** ENDPOINTS ALLOCATION *******************************************/
 
 /* Generic */
-#define USBGEN_EP_SIZE          64
+#define USBGEN_EP_SIZE          8
 #define USBGEN_EP_NUM            1
 
 /** DEFINITIONS ****************************************************/

@@ -67,21 +67,21 @@
 #pragma config PWRTE = OFF      // Power-up Timer Enable (PWRT disabled)
 #pragma config MCLRE = ON       // MCLR Pin Function Select (MCLR/VPP pin function is MCLR)
 #pragma config CP = OFF         // Flash Program Memory Code Protection (Program memory code protection is disabled)
-#pragma config BOREN = ON       // Brown-out Reset Enable (Brown-out Reset enabled)
+#pragma config BOREN = OFF      // Brown-out Reset Enable (Brown-out Reset disabled)
 #pragma config CLKOUTEN = OFF   // Clock Out Enable (CLKOUT function is disabled. I/O or oscillator function on the CLKOUT pin)
-#pragma config IESO = OFF       // Internal/External Switchover Mode (Internal/External Switchover Mode is enabled)
-#pragma config FCMEN = OFF      // Fail-Safe Clock Monitor Enable (Fail-Safe Clock Monitor is enabled)
+#pragma config IESO = OFF       // Internal/External Switchover Mode (Internal/External Switchover Mode is disabled)
+#pragma config FCMEN = OFF      // Fail-Safe Clock Monitor Enable (Fail-Safe Clock Monitor is disabled)
 
 // CONFIG2
 #pragma config WRT = OFF        // Flash Memory Self-Write Protection (Write protection off)
-#pragma config CPUDIV = NOCLKDIV // CPU System Clock Selection Bit (CPU system clock divided by 6)
-#pragma config USBLSCLK = 48MHz // USB Low SPeed Clock Selection bit (System clock expects 48 MHz, FS/LS USB CLKENs divide-by is set to 8.)
+#pragma config CPUDIV = CLKDIV6 // CPU System Clock Selection Bit (CPU system clock divided by 6)
+#pragma config USBLSCLK = 24MHz // USB Low SPeed Clock Selection bit (System clock expects 24 MHz, FS/LS USB CLKENs divide-by is set to 4.)
 #pragma config PLLMULT = 3x     // PLL Multipler Selection Bit (3x Output Frequency Selected)
 #pragma config PLLEN = ENABLED  // PLL Enable Bit (3x or 4x PLL Enabled)
 #pragma config STVREN = ON      // Stack Overflow/Underflow Reset Enable (Stack Overflow or Underflow will cause a Reset)
 #pragma config BORV = LO        // Brown-out Reset Voltage Selection (Brown-out Reset Voltage (Vbor), low trip point selected.)
 #pragma config LPBOR = OFF      // Low-Power Brown Out Reset (Low-Power BOR is disabled)
-//#pragma config LVP = OFF         // Low-Voltage Programming Enable (Low-voltage programming enabled)
+#pragma config LVP = ON         // Low-Voltage Programming Enable (Low-voltage programming enabled)
 
 unsigned char INPacket[USBGEN_EP_SIZE];		//User application buffer for sending IN packets to the host
 unsigned char OUTPacket[USBGEN_EP_SIZE];	//User application buffer for receiving and holding OUT packets sent from the host
@@ -89,9 +89,6 @@ unsigned char OUTPacket[USBGEN_EP_SIZE];	//User application buffer for receiving
 BOOL blinkStatusValid;
 USB_HANDLE USBGenericOutHandle; //USB handle.  Must be initialized to 0 at startup.
 USB_HANDLE USBGenericInHandle;  //USB handle.  Must be initialized to 0 at startup.
-#if defined(__18CXX)
-    #pragma udata
-#endif
 
 /** PRIVATE PROTOTYPES *********************************************/
 static void InitializeSystem(void);
@@ -125,10 +122,6 @@ void interrupt ISRCode()
     }*/
 }
 
-/** DECLARATIONS ***************************************************/
-#if defined(__18CXX)
-    #pragma code
-#endif
 
 /******************************************************************************
  * Function:        void main(void)
@@ -146,11 +139,7 @@ void interrupt ISRCode()
  * Note:            None
  *******************************************************************/
 
-#if defined(__18CXX)
-void main(void)
-#else
 int main(void)
-#endif
 {
     InitializeSystem();
 
@@ -206,59 +195,17 @@ int main(void)
  *******************************************************************/
 static void InitializeSystem(void)
 {
-    #if defined(_PIC14E)
-        //Configure all pins for digital mode, except RB4, which has a POT on it
-        ANSELA = 0x00;
-        #if defined(_16F1459) || defined(_16LF1459)
-            ANSELB = 0x10;  //RB4 has a POT on it, on the Low Pin Count USB Dev Kit board
-        #endif
-        ANSELC = 0x00;
-        #if defined (USE_INTERNAL_OSC)
-            OSCTUNE = 0;
-            OSCCON = 0xFC;          //16MHz HFINTOSC with 3x PLL enabled (48MHz operation)
-            ACTCON = 0x90;          //Enable active clock tuning with USB
-        #endif
-    #endif
 
-//	The USB specifications require that USB peripheral devices must never source
-//	current onto the Vbus pin.  Additionally, USB peripherals should not source
-//	current on D+ or D- when the host/hub is not actively powering the Vbus line.
-//	When designing a self powered (as opposed to bus powered) USB peripheral
-//	device, the firmware should make sure not to turn on the USB module and D+
-//	or D- pull up resistor unless Vbus is actively powered.  Therefore, the
-//	firmware needs some means to detect when Vbus is being powered by the host.
-//	A 5V tolerant I/O pin can be connected to Vbus (through a resistor), and
-// 	can be used to detect when Vbus is high (host actively powering), or low
-//	(host is shut down or otherwise not supplying power).  The USB firmware
-// 	can then periodically poll this I/O pin to know when it is okay to turn on
-//	the USB module/D+/D- pull up resistor.  When designing a purely bus powered
-//	peripheral device, it is not possible to source current on D+ or D- when the
-//	host is not actively providing power on Vbus. Therefore, implementing this
-//	bus sense feature is optional.  This firmware can be made to use this bus
-//	sense feature by making sure "USE_USB_BUS_SENSE_IO" has been defined in the
-//	HardwareProfile.h file.
-    #if defined(USE_USB_BUS_SENSE_IO)
-    tris_usb_bus_sense = INPUT_PIN; // See HardwareProfile.h
-    #endif
+    //Configure all pins for digital mode, except RB4, which has a POT on it
+    ANSELA = 0x00;
+    ANSELC = 0x00;
 
-//	If the host PC sends a GetStatus (device) request, the firmware must respond
-//	and let the host know if the USB peripheral device is currently bus powered
-//	or self powered.  See chapter 9 in the official USB specifications for details
-//	regarding this request.  If the peripheral device is capable of being both
-//	self and bus powered, it should not return a hard coded value for this request.
-//	Instead, firmware should check if it is currently self or bus powered, and
-//	respond accordingly.  If the hardware has been configured like demonstrated
-//	on the PICDEM FS USB Demo Board, an I/O pin can be polled to determine the
-//	currently selected power source.  On the PICDEM FS USB Demo Board, "RA2"
-//	is used for	this purpose.  If using this feature, make sure "USE_SELF_POWER_SENSE_IO"
-//	has been defined in HardwareProfile - (platform).h, and that an appropriate I/O pin
-//  has been mapped	to it.
-    #if defined(USE_SELF_POWER_SENSE_IO)
-    tris_self_power = INPUT_PIN;	// See HardwareProfile.h
-    #endif
+    OSCTUNE = 0;
+    OSCCON = 0xF8;          //8MHz HFINTOSC with 3x PLL enabled (24MHz operation, divided by 6 to 4MHz)
+    ACTCON = 0x90;          //Enable active clock tuning with USB
 
-	USBGenericOutHandle = 0;
-	USBGenericInHandle = 0;
+    USBGenericOutHandle = 0;
+    USBGenericInHandle = 0;
 
     UserInit();			//Application related initialization.  See user.c
 
