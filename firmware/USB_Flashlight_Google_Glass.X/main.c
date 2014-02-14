@@ -63,7 +63,7 @@
 
 // CONFIG1
 #pragma config FOSC = INTOSC    // Oscillator Selection Bits (INTOSC oscillator: I/O function on CLKIN pin)
-#pragma config WDTE = OFF       // Watchdog Timer Enable (WDT disabled)
+#pragma config WDTE = SWDTEN    // Watchdog Timer Enable (WDT controlled by the SWDTEN bit in the WDTCON register)
 #pragma config PWRTE = OFF      // Power-up Timer Enable (PWRT disabled)
 #pragma config MCLRE = ON       // MCLR Pin Function Select (MCLR/VPP pin function is MCLR)
 #pragma config CP = OFF         // Flash Program Memory Code Protection (Program memory code protection is disabled)
@@ -85,8 +85,8 @@
 
 unsigned char INPacket[USBGEN_EP_SIZE];		//User application buffer for sending IN packets to the host
 unsigned char OUTPacket[USBGEN_EP_SIZE];	//User application buffer for receiving and holding OUT packets sent from the host
+volatile BOOL usbInterrupJustNow;
 
-BOOL blinkStatusValid;
 USB_HANDLE USBGenericOutHandle; //USB handle.  Must be initialized to 0 at startup.
 USB_HANDLE USBGenericInHandle;  //USB handle.  Must be initialized to 0 at startup.
 
@@ -98,7 +98,6 @@ void YourLowPriorityISRCode(void);
 void USBCBSendResume(void);
 void UserInit(void);
 void ProcessIO(void);
-void BlinkUSBStatus(void);
 
 void interrupt ISRCode()
 {
@@ -107,8 +106,10 @@ void interrupt ISRCode()
         //Clear the interrupt flag
         //Etc.
 #if defined(USB_INTERRUPT)
-    if (USBInterruptFlag != 0)
+    if (USBInterruptFlag != 0){
         USBDeviceTasks();
+        usbInterrupJustNow=1;
+    }
 #endif
 
  /*   if (INTCONbits.TMR0IF)
@@ -143,6 +144,18 @@ int main(void)
 {
     InitializeSystem();
 
+    WDTCONbits.WDTPS=0b1010;    //1S
+    WDTCONbits.WDTPS=0b0000;    //1mS
+    WDTCONbits.SWDTEN=0;        //disable WDT
+    /*while(1){
+        LATCbits.LATC3=!PORTCbits.RC3;
+        WDTCONbits.SWDTEN=1;
+        SLEEP();
+        WDTCONbits.SWDTEN=0;
+
+        //_delay(1000000);    //1S on 1MHz instruction speed
+    }*/
+
     #if defined(USB_INTERRUPT)
         USBDeviceAttach();
     #endif
@@ -169,6 +182,50 @@ int main(void)
 		// Application-specific tasks.
 		// Application related code may be added here, or in the ProcessIO() function.
         ProcessIO();
+
+/*        INTCONbits.GIE=0;
+        usbInterrupJustNow=0;
+        INTCONbits.GIE=1;
+
+        while(!usbInterrupJustNow){
+            asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");
+            asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");
+            asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");
+            asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");
+            asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");
+            asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");asm("nop");
+
+        }*/
+
+        /*WDTCONbits.SWDTEN=1;
+        SLEEP();
+        WDTCONbits.SWDTEN=0;*/
+
+ /*       asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");
+        asm("nop");*/
+
+
+
+
     }//end while
 }//end main
 
@@ -219,10 +276,15 @@ void UserInit(void)
 {
     //mInitAllLEDs();
     //mInitAllSwitches();//TODO
+
+    WPUAbits.WPUA4=0;             //disable pull up
+    WPUAbits.WPUA5=0;             //disable pull up
+
     TRISC = 0xF7;       //Set RC3 as output
+    TRISAbits.TRISA5 = 1; //INPUT for now
+
     LATAbits.LATA4=1;   //off by default
     TRISAbits.TRISA4 = 0; //RA4 OUT
-    blinkStatusValid = TRUE;	//Blink the normal USB state on the LEDs.
 
 }//end UserInit
 
@@ -245,12 +307,6 @@ void UserInit(void)
  *****************************************************************************/
 void ProcessIO(void)
 {
-    //Blink the LEDs according to the USB device status, but only do so if the PC application isn't connected and controlling the LEDs.
-    if(blinkStatusValid)
-    {
-        BlinkUSBStatus();
-    }
-
     //User Application USB tasks below.
     //Note: The user application should not begin attempting to read/write over the USB
     //until after the device has been fully enumerated.  After the device is fully
@@ -276,22 +332,35 @@ void ProcessIO(void)
     {
         switch(OUTPacket[0])					//Data arrived, check what kind of command might be in the packet of data.
         {
-            case 0x80:  //Toggle LED(s) command from PC application.
-		        blinkStatusValid = FALSE;		//Disable the regular LED blink pattern indicating USB state, PC application is controlling the LEDs.
-/*                if(mGetLED_1() == mGetLED_2())
-                {
-                    mLED_1_Toggle();
-                    mLED_2_Toggle();
-                }
-                else
-                {
-                    mLED_1_On();
-                    mLED_2_On();
-                }*///TODO
-                        
-                        LATCbits.LATC3=!PORTCbits.RC3;
+            case 'F':
+                switch(OUTPacket[1]){
+                    case 'O':   //on
+                        TRISAbits.TRISA5 = 1; //INPUT for now
+                        LATAbits.LATA4=0;
+                        LATAbits.LATA5=LATAbits.LATA4;
+                        TRISAbits.TRISA5 = 0; //OUTPUT
+                        break;
+                    case 'F':   //off
+                        TRISAbits.TRISA5 = 1; //INPUT for now
+                        LATAbits.LATA4=1;
+                        LATAbits.LATA5=LATAbits.LATA4;
+                        TRISAbits.TRISA5 = 0; //OUTPUT
+                        break;
+                    case 'T':   //toggle
+                        TRISAbits.TRISA5 = 1; //INPUT for now
                         LATAbits.LATA4=!PORTAbits.RA4;
-
+                        LATAbits.LATA5=LATAbits.LATA4;
+                        TRISAbits.TRISA5 = 0; //OUTPUT
+                        break;
+                }
+                break;
+            
+            case 0x80:  //Toggle LED(s) command from PC application. keep ip for now
+                LATCbits.LATC3=!PORTCbits.RC3;
+                TRISAbits.TRISA5 = 1; //INPUT for now
+                LATAbits.LATA4=!PORTAbits.RA4;
+                LATAbits.LATA5=LATAbits.LATA4;
+                TRISAbits.TRISA5 = 0; //OUTPUT
                 break;
             case 0x81:  //Get push button state command from PC application.
 				//Now check to make sure no previous attempts to send data to the host are still pending.  If any attemps are still
@@ -327,99 +396,6 @@ void ProcessIO(void)
         USBGenericOutHandle = USBGenRead(USBGEN_EP_NUM,(BYTE*)&OUTPacket,USBGEN_EP_SIZE);
     }
 }//end ProcessIO
-
-
-/********************************************************************
- * Function:        void BlinkUSBStatus(void)
- *
- * PreCondition:    None
- *
- * Input:           None
- *
- * Output:          None
- *
- * Side Effects:    None
- *
- * Overview:        BlinkUSBStatus turns on and off LEDs
- *                  corresponding to the USB device state.
- *
- * Note:            mLED macros can be found in HardwareProfile.h
- *                  USBDeviceState is declared and updated in
- *                  usb_device.c.
- *******************************************************************/
-void BlinkUSBStatus(void)
-{
-    static WORD led_count=0;
-
-    if(led_count == 0)led_count = 10000U;
-    led_count--;
-
-    #define mLED_Both_Off()         {mLED_1_Off();mLED_2_Off();}
-    #define mLED_Both_On()          {mLED_1_On();mLED_2_On();}
-    #define mLED_Only_1_On()        {mLED_1_On();mLED_2_Off();}
-    #define mLED_Only_2_On()        {mLED_1_Off();mLED_2_On();}
-
-    if(USBSuspendControl == 1)
-    {
-        if(led_count==0)
-        {
-      /*      mLED_1_Toggle();
-            if(mGetLED_1())
-            {
-                mLED_2_On();
-            }
-            else
-            {
-                mLED_2_Off();
-            }*/
-        }//end if
-    }
-    else
-    {
-        if(USBDeviceState == DETACHED_STATE)
-        {
-//            mLED_Both_Off();
-        }
-        else if(USBDeviceState == ATTACHED_STATE)
-        {
-//            mLED_Both_On();
-        }
-        else if(USBDeviceState == POWERED_STATE)
-        {
-  //          mLED_Only_1_On();
-        }
-        else if(USBDeviceState == DEFAULT_STATE)
-        {
-    //        mLED_Only_2_On();
-        }
-        else if(USBDeviceState == ADDRESS_STATE)
-        {
-            if(led_count == 0)
-            {
-     //           mLED_1_Toggle();
-      //          mLED_2_Off();
-            }//end if
-        }
-        else if(USBDeviceState == CONFIGURED_STATE)
-        {
-            if(led_count==0)
-            {
-            /*    mLED_1_Toggle();
-                if(mGetLED_1())
-                {
-                    mLED_2_Off();
-                }
-                else
-                {
-                    mLED_2_On();
-                }*/
-            }//end if
-        }//end if(...)
-    }//end if(UCONbits.SUSPND...)
-
-}//end BlinkUSBStatus
-
-
 
 
 // ******************************************************************************************************
