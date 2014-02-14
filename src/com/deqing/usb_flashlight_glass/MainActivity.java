@@ -96,7 +96,7 @@ public class MainActivity extends Activity {
 		
 	    message_card = new Card(this);
 	    message_card.setText("Trying to connect to usb flashlight");
-	    message_card.setInfo("");
+	    message_card.setFootnote("");
 	    View card_view=message_card.toView ();
 	    setContentView(card_view);
 	    
@@ -118,7 +118,7 @@ public class MainActivity extends Activity {
 	
 	void count_down_exit(){
 	    handler.removeCallbacksAndMessages(null);  
-	    message_card.setInfo("Will exit in " + 3 + " seconds.");
+	    message_card.setFootnote("Will exit in " + 3 + " seconds.");
 	    View card_view=message_card.toView ();
 	    setContentView(card_view);
 	    int time_limit;
@@ -132,7 +132,7 @@ public class MainActivity extends Activity {
 	        handler.postDelayed(new Runnable(){
 	            @Override
 	            public void run() {
-	            	message_card.setInfo("Will exit in " + count1 + " seconds.");
+	            	message_card.setFootnote("Will exit in " + count1 + " seconds.");
 	        	    View card_view=message_card.toView ();
 	        	    setContentView(card_view);
 	                if (count1==0){
