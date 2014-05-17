@@ -58,11 +58,11 @@ public class MainActivity extends Activity {
         }
     };
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
-    private final Handler handler = new Handler();
+    private final Handler mHandler = new Handler();
     private UsbManager mUsbManager;
     private PendingIntent mPermissionIntent;
-    private UsbDevice target_device = null;
-    private Card message_card;
+    private UsbDevice mTargetDevice = null;
+    private Card mMessageCard;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,9 +73,9 @@ public class MainActivity extends Activity {
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         registerReceiver(mUsbReceiver, filter);
         mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
-        message_card = new Card(this);
-        message_card.setText("Trying to connect to usb flashlight");
-        message_card.setFootnote("");
+        mMessageCard = new Card(this);
+        mMessageCard.setText("Trying to connect to usb flashlight");
+        mMessageCard.setFootnote("");
         updateView();
         search_usb_device();
     }
@@ -87,21 +87,21 @@ public class MainActivity extends Activity {
     }
 
     void count_down_exit() {
-        handler.removeCallbacksAndMessages(null);
-        message_card.setFootnote("Will exit in " + 3 + " seconds.");
+        mHandler.removeCallbacksAndMessages(null);
+        mMessageCard.setFootnote("Will exit in " + 3 + " seconds.");
         updateView();
         int time_limit;
-        if (target_device == null || mUsbManager.hasPermission(target_device)) {
+        if (mTargetDevice == null || mUsbManager.hasPermission(mTargetDevice)) {
             time_limit = 3;
         } else {
             time_limit = 10;
         }
         for (int count = 0; count < time_limit; count++) {
             final int count1 = time_limit - 1 - count;
-            handler.postDelayed(new Runnable() {
+            mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    message_card.setFootnote("Will exit in " + count1 + " seconds.");
+                    mMessageCard.setFootnote("Will exit in " + count1 + " seconds.");
                     updateView();
                     if (count1 == 0) {
                         finish();
@@ -121,30 +121,30 @@ public class MainActivity extends Activity {
             Log.d(TAG, String.format("VID %04X PID %04X NAME %s", device.getVendorId(),
                     device.getProductId(), device.getDeviceName()));
             if (device.getVendorId() == 0x4207 && device.getProductId() == 0x20A0) {
-                target_device = device;
+                mTargetDevice = device;
                 break;
             }
         }
-        if (target_device != null) {
+        if (mTargetDevice != null) {
             Log.d(TAG, "GOT DEVICE!");
-            message_card.setText("Flashlight found!");
+            mMessageCard.setText("Flashlight found!");
             updateView();
-            mUsbManager.requestPermission(target_device, mPermissionIntent);
+            mUsbManager.requestPermission(mTargetDevice, mPermissionIntent);
             return true;
         }
         Log.w(TAG, "NOT GOT DEVICE!!");
-        message_card.setText("Not found!");
+        mMessageCard.setText("Not found!");
         updateView();
         return false;
     }
 
     public void toggle_flashlight() {
-        if (mUsbManager.hasPermission(target_device)) {
+        if (mUsbManager.hasPermission(mTargetDevice)) {
             UsbDeviceConnection usb_connection;
-            Log.d(TAG, "There are " + target_device.getInterfaceCount() + " interfaces.");
-            UsbInterface intf = target_device.getInterface(0);
+            Log.d(TAG, "There are " + mTargetDevice.getInterfaceCount() + " interfaces.");
+            UsbInterface intf = mTargetDevice.getInterface(0);
             Log.d(TAG, "There are " + intf.getEndpointCount() + " endpoints.");
-            usb_connection = mUsbManager.openDevice(target_device);
+            usb_connection = mUsbManager.openDevice(mTargetDevice);
             usb_connection.claimInterface(intf, true);
             UsbEndpoint out_endpoint = null;
             for (int i = 0; i < intf.getEndpointCount(); i++) {
@@ -157,23 +157,23 @@ public class MainActivity extends Activity {
                 byte[] bytes = {(byte) 0x80};
                 int TIMEOUT = 0;
                 usb_connection.bulkTransfer(out_endpoint, bytes, 1, TIMEOUT);
-                message_card.setText("Flashlight Toggled");
+                mMessageCard.setText("Flashlight Toggled");
                 updateView();
             }
         } else {
-            message_card.setText("NO USB permission");
+            mMessageCard.setText("NO USB permission");
             updateView();
         }
     }
 
     @Override
     public void onDestroy() {
-        handler.removeCallbacksAndMessages(null);
+        mHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
 
     private void updateView() {
-        View card_view = message_card.getView();
+        View card_view = mMessageCard.getView();
         setContentView(card_view);
     }
 }
