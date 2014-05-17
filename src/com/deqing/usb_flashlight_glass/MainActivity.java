@@ -57,12 +57,11 @@ public class MainActivity extends Activity {
             }
         }
     };
-    private static final String ACTION_USB_PERMISSION =
-            "com.android.example.USB_PERMISSION";
-    Handler handler = new Handler();
-    UsbManager mUsbManager;
-    PendingIntent mPermissionIntent;
-    UsbDevice target_device = null;
+    private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
+    private final Handler handler = new Handler();
+    private UsbManager mUsbManager;
+    private PendingIntent mPermissionIntent;
+    private UsbDevice target_device = null;
     private Card message_card;
 
     @Override
