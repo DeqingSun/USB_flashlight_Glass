@@ -122,7 +122,8 @@ public class MainActivity extends Activity {
         Log.d(TAG, Integer.toString(deviceList.size()));
         while (deviceIterator.hasNext()) {
             UsbDevice device = deviceIterator.next();
-            Log.d(TAG, "VID " + String.format("%04X", device.getVendorId()) + " PID " + String.format("%04X", device.getProductId()) + " NAME " + device.getDeviceName());
+            Log.d(TAG, String.format("VID %04X PID %04X NAME %s", device.getVendorId(),
+                    device.getProductId(), device.getDeviceName()));
             if (device.getVendorId() == 0x4207 && device.getProductId() == 0x20A0) {
                 target_device = device;
                 break;
