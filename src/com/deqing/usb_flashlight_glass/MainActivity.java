@@ -19,9 +19,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 import android.view.View;
 
 public class MainActivity extends Activity {
+    private static final String TAG = MainActivity.class.getSimpleName();
 	
 	Handler handler = new Handler();
 
@@ -43,11 +45,11 @@ public class MainActivity extends Activity {
 	                if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
 	                    if(device != null){
 	                      //call method to set up device communication
-	                    	System.out.println("GOT Permission!");
+	                    	Log.d(TAG, "GOT Permission!");
 	                    	toggle_flashlight();
 	                   }
 	                }else {
-	                	System.out.println("permission denied for device " + device);
+	                	Log.e(TAG, "permission denied for device " + device);
 	                }
 	            }
 	        }
@@ -62,36 +64,36 @@ public class MainActivity extends Activity {
 	            synchronized(this){
 	                UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
 	                if (device != null){
-	                	System.out.println("GOT DEVICE!");
+	                	Log.d(TAG, "GOT DEVICE!");
 	                }
 	            }
 	        }
 	    }
 	};
-	
-	
+
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
 		mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
 
 		//IntentFilter attachedFilter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_ATTACHED);
 		//registerReceiver(mUsbAttachedReceiver, attachedFilter);
-		
+
 		IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
 		registerReceiver(mUsbReceiver, filter);
 		mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
-		
+
 	    message_card = new Card(this);
 	    message_card.setText("Trying to connect to usb flashlight");
 	    message_card.setFootnote("");
 	    View card_view=message_card.getView ();
 	    setContentView(card_view);
-	    
+
 	    search_usb_device();
 	}
-	
+
 	@Override
 	protected void onResume() {
 	    super.onResume();
@@ -100,9 +102,9 @@ public class MainActivity extends Activity {
 
 	    count_down_exit();
 	}
-	
+
 	void count_down_exit(){
-	    handler.removeCallbacksAndMessages(null);  
+	    handler.removeCallbacksAndMessages(null);
 	    message_card.setFootnote("Will exit in " + 3 + " seconds.");
 	    View card_view=message_card.getView ();
 	    setContentView(card_view);
@@ -121,36 +123,36 @@ public class MainActivity extends Activity {
 	        	    View card_view=message_card.getView ();
 	        	    setContentView(card_view);
 	                if (count1==0){
-	                	finish();	                	
+	                	finish();
 	                }
 	            }
 	        }, 1000 * (count + 1));
-	    }	
+	    }
 	}
-	
+
 	public boolean search_usb_device(){
 		HashMap<String, UsbDevice> deviceList = mUsbManager.getDeviceList();
 		Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
-		
-		System.out.println(deviceList);
-		System.out.println(deviceList.size());
+
+		Log.d(TAG, deviceList.toString());
+        Log.d(TAG, Integer.toString(deviceList.size()));
 		while(deviceIterator.hasNext()){
 		    UsbDevice device = deviceIterator.next();
-		    System.out.println("VID "+String.format("%04X", device.getVendorId())+" PID "+String.format("%04X", device.getProductId())+" NAME "+device.getDeviceName());
+		    Log.d(TAG, "VID " + String.format("%04X", device.getVendorId()) + " PID " + String.format("%04X", device.getProductId()) + " NAME " + device.getDeviceName());
 		    if (device.getVendorId()==0x4207 && device.getProductId()==0x20A0){
 		    	target_device=device;
 		    	break;
 		    }
 		}
 		if (target_device!=null){
-			System.out.println("GOT DEVICE!");
+			Log.d(TAG, "GOT DEVICE!");
 			message_card.setText("Flashlight found!");
     	    View card_view=message_card.getView ();
     	    setContentView(card_view);
 			mUsbManager.requestPermission(target_device, mPermissionIntent);
 			return true;
 		}
-        System.out.println("NOT GOT DEVICE!!");
+        Log.w(TAG, "NOT GOT DEVICE!!");
         message_card.setText("Not found!");
         View card_view=message_card.getView ();
         setContentView(card_view);
@@ -160,10 +162,10 @@ public class MainActivity extends Activity {
 	public void toggle_flashlight(){
 		if (mUsbManager.hasPermission (target_device)){
 			UsbDeviceConnection usb_connection;
-			
-			System.out.println("There are "+target_device.getInterfaceCount()+" interfaces.");
+
+			Log.d(TAG, "There are "+target_device.getInterfaceCount()+" interfaces.");
 			UsbInterface intf = target_device.getInterface(0);
-			System.out.println("There are "+intf.getEndpointCount()+" endpoints.");
+			Log.d(TAG, "There are "+intf.getEndpointCount()+" endpoints.");
 			
 			usb_connection = mUsbManager.openDevice(target_device); 
 			
