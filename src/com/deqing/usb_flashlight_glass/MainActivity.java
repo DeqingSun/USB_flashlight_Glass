@@ -1,13 +1,9 @@
 package com.deqing.usb_flashlight_glass;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 
 import com.google.android.glass.app.Card;
-import com.google.android.glass.widget.CardScrollAdapter;
-import com.google.android.glass.widget.CardScrollView;
 
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
@@ -23,17 +19,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.util.Log;
-import android.view.Menu;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
 public class MainActivity extends Activity {
 	
 	Handler handler = new Handler();
-	
-    //private List<Card> mCards;
+
     private Card message_card;
     UsbManager mUsbManager;
 	PendingIntent mPermissionIntent;
@@ -47,7 +38,7 @@ public class MainActivity extends Activity {
 	        String action = intent.getAction();
 	        if (ACTION_USB_PERMISSION.equals(action)) {
 	            synchronized (this) {
-	                UsbDevice device = (UsbDevice)intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+	                UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
 
 	                if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
 	                    if(device != null){
@@ -62,17 +53,15 @@ public class MainActivity extends Activity {
 	        }
 	    }
 	};
-	
+
 	private final BroadcastReceiver mUsbAttachedReceiver = new BroadcastReceiver(){
 	@Override
 	public void onReceive(Context context, Intent intent){
-	        //BREAKPOINT HERE IS NEVER HIT
 	        String action = intent.getAction();
 	        if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
 	            synchronized(this){
-	                UsbDevice device = (UsbDevice)intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+	                UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
 	                if (device != null){
-	                    //getDevicePermission(device);
 	                	System.out.println("GOT DEVICE!");
 	                }
 	            }
@@ -101,10 +90,6 @@ public class MainActivity extends Activity {
 	    setContentView(card_view);
 	    
 	    search_usb_device();
-	    if (target_device!=null){
-	    	//toggle_flashlight();   	
-	    }
-	    
 	}
 	
 	@Override
@@ -112,7 +97,7 @@ public class MainActivity extends Activity {
 	    super.onResume();
 
 
-	    
+
 	    count_down_exit();
 	}
 	
@@ -144,17 +129,13 @@ public class MainActivity extends Activity {
 	}
 	
 	public boolean search_usb_device(){
-		boolean result=false;
 		HashMap<String, UsbDevice> deviceList = mUsbManager.getDeviceList();
 		Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
 		
 		System.out.println(deviceList);
 		System.out.println(deviceList.size());
-		int c=deviceList.size();
-		int total=0;
 		while(deviceIterator.hasNext()){
 		    UsbDevice device = deviceIterator.next();
-		    total++;
 		    System.out.println("VID "+String.format("%04X", device.getVendorId())+" PID "+String.format("%04X", device.getProductId())+" NAME "+device.getDeviceName());
 		    if (device.getVendorId()==0x4207 && device.getProductId()==0x20A0){
 		    	target_device=device;
@@ -167,19 +148,17 @@ public class MainActivity extends Activity {
     	    View card_view=message_card.getView ();
     	    setContentView(card_view);
 			mUsbManager.requestPermission(target_device, mPermissionIntent);
-			result=true;
-		}else{
-			System.out.println("NOT GOT DEVICE!!");
-			message_card.setText("Not found!");
-    	    View card_view=message_card.getView ();
-    	    setContentView(card_view);
-    	    result=false;
+			return true;
 		}
-		return result;
+        System.out.println("NOT GOT DEVICE!!");
+        message_card.setText("Not found!");
+        View card_view=message_card.getView ();
+        setContentView(card_view);
+		return false;
 	}
+
 	public void toggle_flashlight(){
 		if (mUsbManager.hasPermission (target_device)){
-			boolean forceClaim = true;
 			UsbDeviceConnection usb_connection;
 			
 			System.out.println("There are "+target_device.getInterfaceCount()+" interfaces.");
@@ -188,7 +167,7 @@ public class MainActivity extends Activity {
 			
 			usb_connection = mUsbManager.openDevice(target_device); 
 			
-			usb_connection.claimInterface(intf, forceClaim);
+			usb_connection.claimInterface(intf, true);
 			
 			UsbEndpoint out_endpoint = null;
 			for (int i=0;i<intf.getEndpointCount();i++){
