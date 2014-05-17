@@ -76,8 +76,7 @@ public class MainActivity extends Activity {
         message_card = new Card(this);
         message_card.setText("Trying to connect to usb flashlight");
         message_card.setFootnote("");
-        View card_view = message_card.getView();
-        setContentView(card_view);
+        updateView();
         search_usb_device();
     }
 
@@ -90,8 +89,7 @@ public class MainActivity extends Activity {
     void count_down_exit() {
         handler.removeCallbacksAndMessages(null);
         message_card.setFootnote("Will exit in " + 3 + " seconds.");
-        View card_view = message_card.getView();
-        setContentView(card_view);
+        updateView();
         int time_limit;
         if (target_device == null || mUsbManager.hasPermission(target_device)) {
             time_limit = 3;
@@ -104,8 +102,7 @@ public class MainActivity extends Activity {
                 @Override
                 public void run() {
                     message_card.setFootnote("Will exit in " + count1 + " seconds.");
-                    View card_view = message_card.getView();
-                    setContentView(card_view);
+                    updateView();
                     if (count1 == 0) {
                         finish();
                     }
@@ -131,15 +128,13 @@ public class MainActivity extends Activity {
         if (target_device != null) {
             Log.d(TAG, "GOT DEVICE!");
             message_card.setText("Flashlight found!");
-            View card_view = message_card.getView();
-            setContentView(card_view);
+            updateView();
             mUsbManager.requestPermission(target_device, mPermissionIntent);
             return true;
         }
         Log.w(TAG, "NOT GOT DEVICE!!");
         message_card.setText("Not found!");
-        View card_view = message_card.getView();
-        setContentView(card_view);
+        updateView();
         return false;
     }
 
@@ -163,13 +158,11 @@ public class MainActivity extends Activity {
                 int TIMEOUT = 0;
                 usb_connection.bulkTransfer(out_endpoint, bytes, 1, TIMEOUT);
                 message_card.setText("Flashlight Toggled");
-                View card_view = message_card.getView();
-                setContentView(card_view);
+                updateView();
             }
         } else {
             message_card.setText("NO USB permission");
-            View card_view = message_card.getView();
-            setContentView(card_view);
+            updateView();
         }
     }
 
@@ -177,5 +170,10 @@ public class MainActivity extends Activity {
     public void onDestroy() {
         handler.removeCallbacksAndMessages(null);
         super.onDestroy();
+    }
+
+    private void updateView() {
+        View card_view = message_card.getView();
+        setContentView(card_view);
     }
 }
