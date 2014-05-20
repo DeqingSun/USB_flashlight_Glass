@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">USB_flashlight_Glass</string>
-    <string name="toggle_flashlight">toggle flashlight</string>
-    <string name="flashlight_prompt">Turn ON or OFF</string>
+    <string name="app_name">USB Flashlight</string>
+    <string name="searching">Searching for flashlight</string>
+    <string name="device_not_found">Flashlight not found!\nConnect it to continue</string>
+    <string name="device_found">Flashlight found!</string>
+    <string name="connection_failed">Connection failed!</string>
+    <string name="flashlight_enabled">Flashlight turned on</string>
+    <string name="menu_stop">Stop</string>
+    <string name="menu_description">Turn off the flashlight</string>
 </resources>
