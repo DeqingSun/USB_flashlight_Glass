@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name">USB_flashlight_Glass</string>
-    <string name="action_settings">Settings</string>
     <string name="toggle_flashlight">toggle flashlight</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="stop">Stop</string>
     <string name="flashlight_prompt">Turn ON or OFF</string>
 </resources>
