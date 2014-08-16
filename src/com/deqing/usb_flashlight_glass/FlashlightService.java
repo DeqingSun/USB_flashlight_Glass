@@ -103,6 +103,7 @@ public class FlashlightService extends Service {
             mIsFlashlightOn = false;
             Log.w(TAG, "NOT GOT DEVICE!!");
             updateStatus(R.string.device_not_found);
+            return;
         }
         Log.d(TAG, "GOT DEVICE!");
         if (mUsbManager.hasPermission(mFlashlight)) {
