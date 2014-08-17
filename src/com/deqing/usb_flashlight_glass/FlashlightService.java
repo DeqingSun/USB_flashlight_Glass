@@ -44,7 +44,7 @@ public class FlashlightService extends Service {
                     UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
                     if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                         Log.d(TAG, "GOT Permission!");
-                        toggle_flashlight();
+                        toggle_flashlight(true,true);	//turn on flashlight
                     } else {
                         mIsFlashlightOn = false;
                         updateStatus(R.string.connection_failed);
@@ -107,13 +107,17 @@ public class FlashlightService extends Service {
         }
         Log.d(TAG, "GOT DEVICE!");
         if (mUsbManager.hasPermission(mFlashlight)) {
-            toggle_flashlight();
+        	toggle_flashlight(true,true);	//turn on flashlight
         } else {
             mUsbManager.requestPermission(mFlashlight, mPermissionIntent);
         }
     }
+    
+    public void toggle_flashlight() {	//toggle flashlight
+    	toggle_flashlight(false,false);	
+    }
 
-    public void toggle_flashlight() {
+    public void toggle_flashlight(boolean cmd_specified,boolean cmd_on) {
         if (!mUsbManager.hasPermission(mFlashlight)) {
             Log.e(TAG, "No permission to toggle flashlight");
             updateStatus(R.string.connection_failed);
@@ -132,10 +136,20 @@ public class FlashlightService extends Service {
             }
         }
         if (out_endpoint != null) {
-            byte[] bytes = {(byte) 0x80};
-            int TIMEOUT = 0;
-            usb_connection.bulkTransfer(out_endpoint, bytes, 1, TIMEOUT);
-            mIsFlashlightOn = !mIsFlashlightOn;
+        	int TIMEOUT = 0;
+        	byte[] bytes={(byte) 'F',(byte) 'T'};
+        	if (cmd_specified){
+        		if (cmd_on){
+        			bytes[1]=(byte) 'O';
+        			mIsFlashlightOn = true;
+        		}else{
+        			bytes[1]=(byte) 'F';
+        			mIsFlashlightOn = false;
+        		}
+        	}else{
+        		mIsFlashlightOn = !mIsFlashlightOn;
+        	}
+            usb_connection.bulkTransfer(out_endpoint, bytes, 2, TIMEOUT);
             Log.d(TAG, "Flashlight toggled");
             updateStatus(R.string.flashlight_enabled);
         } else {
@@ -158,7 +172,7 @@ public class FlashlightService extends Service {
     public void onDestroy() {
         unregisterReceiver(mUsbReceiver);
         if (mIsFlashlightOn) {
-            toggle_flashlight();
+            toggle_flashlight(true,false); 	//turn off flashlight
         }
         if (mLiveCard != null && mLiveCard.isPublished()) {
             mLiveCard.unpublish();
