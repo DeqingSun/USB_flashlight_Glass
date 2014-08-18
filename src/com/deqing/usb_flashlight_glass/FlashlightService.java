@@ -12,6 +12,8 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -35,6 +37,7 @@ public class FlashlightService extends Service {
     private UsbManager mUsbManager;
     private UsbDevice mFlashlight;
     private boolean mIsFlashlightOn = false;
+    private SoundPool mSoundPool;
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -159,6 +162,15 @@ public class FlashlightService extends Service {
             }else{
             	updateStatus(R.string.flashlight_disabled);
             }
+            mSoundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
+            mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+                @Override
+                public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+                    soundPool.play(sampleId, 1.0f, 1.0f, 0, 0, 1.0f);
+                }
+            });
+            int soundResId = mIsFlashlightOn ? R.raw.sound_don : R.raw.sound_doff;
+            mSoundPool.load(this, soundResId, 0);
         } else {
             mIsFlashlightOn = false;
             Log.e(TAG, "Out endpoint not found");
