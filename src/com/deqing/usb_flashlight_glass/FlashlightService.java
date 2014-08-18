@@ -49,7 +49,7 @@ public class FlashlightService extends Service {
                         toggle_flashlight(true,true);	//turn on flashlight
                     } else {
                         mIsFlashlightOn = false;
-                        updateStatus(R.string.connection_failed);
+                        updateStatus(R.string.connection_failed,R.drawable.ic_flashlight_150_err);
                         Log.e(TAG, "permission denied for device " + device);
                     }
                 }
@@ -104,7 +104,7 @@ public class FlashlightService extends Service {
         if (mFlashlight == null) {
             mIsFlashlightOn = false;
             Log.w(TAG, "NOT GOT DEVICE!!");
-            updateStatus(R.string.device_not_found);
+            updateStatus(R.string.device_not_found,R.drawable.ic_flashlight_150_err);
             return;
         }
         Log.d(TAG, "GOT DEVICE!");
@@ -126,7 +126,7 @@ public class FlashlightService extends Service {
     public void toggle_flashlight(boolean cmd_specified,boolean cmd_on) {
         if (!mUsbManager.hasPermission(mFlashlight)) {
             Log.e(TAG, "No permission to toggle flashlight");
-            updateStatus(R.string.connection_failed);
+            updateStatus(R.string.connection_failed,R.drawable.ic_flashlight_150_err);
             return;
         }
         Log.d(TAG, "There are " + mFlashlight.getInterfaceCount() + " interfaces.");
@@ -158,9 +158,9 @@ public class FlashlightService extends Service {
             usb_connection.bulkTransfer(out_endpoint, bytes, 2, TIMEOUT);
             Log.d(TAG, "Flashlight toggled");
             if (mIsFlashlightOn){
-            	updateStatus(R.string.flashlight_enabled);
+            	updateStatus(R.string.flashlight_enabled,R.drawable.ic_flashlight_150_on);
             }else{
-            	updateStatus(R.string.flashlight_disabled);
+            	updateStatus(R.string.flashlight_disabled,R.drawable.ic_flashlight_150_off);
             }
             mSoundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
             mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
@@ -174,15 +174,16 @@ public class FlashlightService extends Service {
         } else {
             mIsFlashlightOn = false;
             Log.e(TAG, "Out endpoint not found");
-            updateStatus(R.string.connection_failed);
+            updateStatus(R.string.connection_failed,R.drawable.ic_flashlight_150_err);
         }
         usb_connection.close();
         usb_connection.releaseInterface(intf);
     }
 
-    private void updateStatus(int statusResId) {
+    private void updateStatus(int statusResId,int imageResId) {
         if (mLiveCardView != null && mLiveCard != null && mLiveCard.isPublished()) {
             mLiveCardView.setTextViewText(R.id.status, getString(statusResId));
+            mLiveCardView.setImageViewResource (R.id.imageStatus, imageResId);
             mLiveCard.setViews(mLiveCardView);
         }
     }

@@ -7,7 +7,6 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -82,9 +81,11 @@ public class MenuActivity extends Activity {
         if (isFlashlightOn || (mFlashlightService==null)) {
             MenuUtils.setDescription(stop, R.string.menu_stop_off_description);
             toggle.setTitle(R.string.menu_off);
+            toggle.setIcon(R.drawable.ic_flashlight_50_off);
         } else {
             MenuUtils.setDescription(stop, R.string.menu_stop_description);
             toggle.setTitle(R.string.menu_on);
+            toggle.setIcon(R.drawable.ic_flashlight_50_on);
         }
         return true;
     }
