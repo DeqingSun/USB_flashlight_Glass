@@ -7,6 +7,7 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -24,17 +25,19 @@ public class MenuActivity extends Activity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             if (service instanceof FlashlightService.FlashlightBinder) {
                 isFlashlightOn = ((FlashlightService.FlashlightBinder) service).isFlashlightOn();
+                mFlashlightService=((FlashlightService.FlashlightBinder) service);
                 openOptionsMenu();
             }
-            // No need to keep the service bound.
-            unbindService(this);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+        	mFlashlightService=null;
             // Nothing to do here.
         }
     };
+    
+    private FlashlightService.FlashlightBinder mFlashlightService;
     private boolean mAttachedToWindow;
     private boolean mOptionsMenuOpen;
 
@@ -75,10 +78,13 @@ public class MenuActivity extends Activity {
     @Override
     public boolean onPrepareOptionsMenu(final Menu menu) {
         MenuItem stop = menu.findItem(R.id.menu_stop);
-        if (isFlashlightOn) {
-            MenuUtils.setDescription(stop, R.string.menu_description);
+        MenuItem toggle = menu.findItem(R.id.menu_toggle);
+        if (isFlashlightOn || (mFlashlightService==null)) {
+            MenuUtils.setDescription(stop, R.string.menu_stop_off_description);
+            toggle.setTitle(R.string.menu_off);
         } else {
-            MenuUtils.setDescription(stop, null);
+            MenuUtils.setDescription(stop, R.string.menu_stop_description);
+            toggle.setTitle(R.string.menu_on);
         }
         return true;
     }
@@ -98,6 +104,12 @@ public class MenuActivity extends Activity {
                     }
                 });
                 return true;
+            case R.id.menu_toggle:
+            	if (mFlashlightService!=null){
+            		mFlashlightService.setToggleFlashlight();
+            	}
+            	//((FlashlightService.FlashlightBinder) service).isFlashlightOn();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -106,6 +118,9 @@ public class MenuActivity extends Activity {
     @Override
     public void onOptionsMenuClosed(Menu menu) {
         mOptionsMenuOpen = false;
+        
+        unbindService(mConnection);
+        
         finish();
     }
 

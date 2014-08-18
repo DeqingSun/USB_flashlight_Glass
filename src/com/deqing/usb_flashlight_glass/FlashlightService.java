@@ -30,7 +30,6 @@ public class FlashlightService extends Service {
     private static final String TAG = FlashlightService.class.getSimpleName();
     private static final String LIVE_CARD_TAG = "flashlight";
     private static final String ACTION_USB_PERMISSION = "com.deqing.usb_flashlight_glass.USB_PERMISSION";
-    private FlashlightBinder mFlashlightBinder = new FlashlightBinder();
     private LiveCard mLiveCard;
     private RemoteViews mLiveCardView;
     private UsbManager mUsbManager;
@@ -114,7 +113,11 @@ public class FlashlightService extends Service {
     }
     
     public void toggle_flashlight() {	//toggle flashlight
-    	toggle_flashlight(false,false);	
+    	if (mIsFlashlightOn){
+    		toggle_flashlight(true,false);	
+    	}else{
+    		toggle_flashlight(true,true);	
+    	}
     }
 
     public void toggle_flashlight(boolean cmd_specified,boolean cmd_on) {
@@ -151,7 +154,11 @@ public class FlashlightService extends Service {
         	}
             usb_connection.bulkTransfer(out_endpoint, bytes, 2, TIMEOUT);
             Log.d(TAG, "Flashlight toggled");
-            updateStatus(R.string.flashlight_enabled);
+            if (mIsFlashlightOn){
+            	updateStatus(R.string.flashlight_enabled);
+            }else{
+            	updateStatus(R.string.flashlight_disabled);
+            }
         } else {
             mIsFlashlightOn = false;
             Log.e(TAG, "Out endpoint not found");
@@ -195,6 +202,10 @@ public class FlashlightService extends Service {
 
         public boolean isFlashlightOn() {
             return mIsFlashlightOn;
+        }
+        
+        public void setToggleFlashlight() {
+        	toggle_flashlight();
         }
     }
 }

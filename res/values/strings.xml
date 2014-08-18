@@ -6,6 +6,10 @@
     <string name="device_found">Flashlight found!</string>
     <string name="connection_failed">Connection failed!</string>
     <string name="flashlight_enabled">Flashlight turned on</string>
+    <string name="flashlight_disabled">Flashlight turned off</string>
     <string name="menu_stop">Stop</string>
-    <string name="menu_description">Turn off the flashlight</string>
+    <string name="menu_on">Turn on</string>
+    <string name="menu_off">Turn off</string>
+    <string name="menu_stop_off_description">Turn off the flashlight and exit</string>
+    <string name="menu_stop_description">Exit Glassware</string>
 </resources>
