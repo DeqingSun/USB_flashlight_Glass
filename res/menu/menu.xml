@@ -4,9 +4,9 @@
     <item
         android:id="@+id/menu_toggle"
         android:icon="@drawable/ic_stop"
-        android:title="@string/menu_off"/>
+        android:title="@string/menu_off_voice_command"/>
     <item
         android:id="@+id/menu_stop"
         android:icon="@drawable/ic_stop"
-        android:title="@string/menu_stop"/>
+        android:title="@string/menu_stop_voice_command"/>
 </menu>

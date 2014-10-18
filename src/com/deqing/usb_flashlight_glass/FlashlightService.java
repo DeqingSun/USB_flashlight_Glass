@@ -73,6 +73,7 @@ public class FlashlightService extends Service {
             mLiveCard = new LiveCard(this, LIVE_CARD_TAG);
             mLiveCardView = new RemoteViews(getPackageName(), R.layout.flashlight);
             mLiveCard.setViews(mLiveCardView);
+            mLiveCard.setVoiceActionEnabled(true);
             // Create the required menu activity intent
             Intent menuIntent = new Intent(this, MenuActivity.class);
             menuIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

@@ -10,8 +10,12 @@ import android.os.IBinder;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
 
+import com.google.android.glass.timeline.LiveCard;
 import com.google.android.glass.view.MenuUtils;
+import com.google.android.glass.view.WindowUtils;
 
 /**
  * Menu Activity used to stop the ongoing service
@@ -25,7 +29,6 @@ public class MenuActivity extends Activity {
             if (service instanceof FlashlightService.FlashlightBinder) {
                 isFlashlightOn = ((FlashlightService.FlashlightBinder) service).isFlashlightOn();
                 mFlashlightService=((FlashlightService.FlashlightBinder) service);
-                openOptionsMenu();
             }
         }
 
@@ -35,66 +38,116 @@ public class MenuActivity extends Activity {
             // Nothing to do here.
         }
     };
-    
+
+    private boolean mFromLiveCardVoice;
     private FlashlightService.FlashlightBinder mFlashlightService;
-    private boolean mAttachedToWindow;
-    private boolean mOptionsMenuOpen;
+    private boolean mDoToggle;
+    private boolean mDoStop;
+    private boolean mDoFinish;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mFromLiveCardVoice = getIntent().getBooleanExtra(LiveCard.EXTRA_FROM_LIVECARD_VOICE, false);
+        if (mFromLiveCardVoice) {
+            getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
+        }
         bindService(new Intent(this, FlashlightService.class), mConnection, 0);
     }
 
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
-        mAttachedToWindow = true;
-        openOptionsMenu();
-    }
-
-    @Override
-    public void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        mAttachedToWindow = false;
-    }
-
-    @Override
-    public void openOptionsMenu() {
-        if (!mOptionsMenuOpen && mAttachedToWindow) {
-            mOptionsMenuOpen = true;
-            super.openOptionsMenu();
+        if (!mFromLiveCardVoice) {
+            openOptionsMenu();
         }
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu, menu);
-        return true;
-    }
+    public boolean onCreatePanelMenu(int featureId, Menu menu) {
+        if (isMyMenu(featureId)) {
+            getMenuInflater().inflate(R.menu.menu, menu);
 
-    @Override
-    public boolean onPrepareOptionsMenu(final Menu menu) {
-        MenuItem stop = menu.findItem(R.id.menu_stop);
-        MenuItem toggle = menu.findItem(R.id.menu_toggle);
-        if (isFlashlightOn || (mFlashlightService==null)) {
-            MenuUtils.setDescription(stop, R.string.menu_stop_off_description);
-            toggle.setTitle(R.string.menu_off);
-            toggle.setIcon(R.drawable.ic_flashlight_50_off);
-        } else {
-            MenuUtils.setDescription(stop, R.string.menu_stop_description);
-            toggle.setTitle(R.string.menu_on);
-            toggle.setIcon(R.drawable.ic_flashlight_50_on);
+            MenuItem stop = menu.findItem(R.id.menu_stop);
+            MenuItem toggle = menu.findItem(R.id.menu_toggle);
+            if (mFromLiveCardVoice){
+                toggle.setTitle(R.string.menu_off_voice_command);
+                stop.setTitle(R.string.menu_stop_voice_command);
+            }
+
+            if (isFlashlightOn || (mFlashlightService==null)) {
+                if (mFromLiveCardVoice){
+                    toggle.setTitle(R.string.menu_off_voice_command);
+                    stop.setTitle(R.string.menu_stop_voice_command);
+                }else {
+                    MenuUtils.setDescription(stop, R.string.menu_stop_off_description);
+                    toggle.setTitle(R.string.menu_off);
+                    stop.setTitle(R.string.menu_stop);
+                    toggle.setIcon(R.drawable.ic_flashlight_50_off);
+                }
+            } else {
+                if (mFromLiveCardVoice){
+                    toggle.setTitle(R.string.menu_on_voice_command);
+                    stop.setTitle(R.string.menu_stop_voice_command);
+                }else {
+                    MenuUtils.setDescription(stop, R.string.menu_stop_off_description);
+                    toggle.setTitle(R.string.menu_on);
+                    stop.setTitle(R.string.menu_stop);
+                    toggle.setIcon(R.drawable.ic_flashlight_50_on);
+                }
+            }
+            return true;
         }
-        return true;
+        return super.onCreatePanelMenu(featureId, menu);
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection.
-        switch (item.getItemId()) {
+    public boolean onPreparePanel(int featureId, View view, Menu menu) {
+        if (isMyMenu(featureId)) {
+            // Don't reopen menu once we are finishing. This is necessary
+            // since voice menus reopen themselves while in focus.
+            return !mDoFinish;
+        }
+        return super.onPreparePanel(featureId, view, menu);
+    }
+
+    @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+        if (isMyMenu(featureId)) {
+            switch (item.getItemId()) {
             case R.id.menu_stop:
+                mDoStop=true;
+                return true;
+            case R.id.menu_toggle:
+                mDoToggle=true;
+                return true;
+            }
+        }
+        return super.onMenuItemSelected(featureId, item);
+    }
+
+    @Override
+    public void onPanelClosed(int featureId, Menu menu) {
+        super.onPanelClosed(featureId, menu);
+        if (isMyMenu(featureId)) {
+            // When the menu panel closes, either an item is selected from the menu or the
+            // menu is dismissed by swiping down. Either way, we end the activity.
+            mDoFinish = true;
+            performActionsIfConnected();
+        }
+    }
+
+    private void performActionsIfConnected() {
+        if (mFlashlightService != null) {
+            if (mDoToggle) {
+                mDoToggle = false;
+                if (mFlashlightService!=null){
+                    mFlashlightService.setToggleFlashlight();
+                }
+                //((FlashlightService.FlashlightBinder) service).isFlashlightOn();
+            }
+            if (mDoStop){
+                mDoStop = false;
                 // Stop the service at the end of the message queue for proper options menu
                 // animation. This is only needed when starting a new Activity or stopping a Service
                 // that published a LiveCard.
@@ -104,25 +157,13 @@ public class MenuActivity extends Activity {
                         stopService(new Intent(MenuActivity.this, FlashlightService.class));
                     }
                 });
-                return true;
-            case R.id.menu_toggle:
-            	if (mFlashlightService!=null){
-            		mFlashlightService.setToggleFlashlight();
-            	}
-            	//((FlashlightService.FlashlightBinder) service).isFlashlightOn();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+            }
+            if (mDoFinish) {
+                mFlashlightService = null;
+                unbindService(mConnection);
+                finish();
+            }
         }
-    }
-
-    @Override
-    public void onOptionsMenuClosed(Menu menu) {
-        mOptionsMenuOpen = false;
-        
-        unbindService(mConnection);
-        
-        finish();
     }
 
     /**
@@ -130,5 +171,10 @@ public class MenuActivity extends Activity {
      */
     protected void post(Runnable runnable) {
         mHandler.post(runnable);
+    }
+
+    private boolean isMyMenu(int featureId) {
+        return featureId == Window.FEATURE_OPTIONS_PANEL ||
+                featureId == WindowUtils.FEATURE_VOICE_COMMANDS;
     }
 }
