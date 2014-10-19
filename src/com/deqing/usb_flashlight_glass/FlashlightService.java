@@ -125,6 +125,7 @@ public class FlashlightService extends Service {
     }
 
     public void toggle_flashlight(boolean cmd_specified,boolean cmd_on) {
+        if (mFlashlight == null) return;
         if (!mUsbManager.hasPermission(mFlashlight)) {
             Log.e(TAG, "No permission to toggle flashlight");
             updateStatus(R.string.connection_failed,R.drawable.ic_flashlight_150_err);
