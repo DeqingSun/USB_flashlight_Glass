@@ -2,7 +2,8 @@
 <resources>
     <string name="app_name">USB Flashlight</string>
     <string name="searching">Searching for flashlight</string>
-    <string name="device_not_found">Flashlight not found!\nConnect it to continue</string>
+    <string name="device_not_found">Flashlight not found!</string>
+    <string name="device_not_found_foot_note">Connect it to USB port to continue</string>
     <string name="device_found">Flashlight found!</string>
     <string name="connection_failed">Connection failed!</string>
     <string name="flashlight_enabled">Flashlight turned on</string>

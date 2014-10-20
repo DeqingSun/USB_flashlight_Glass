@@ -4,6 +4,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbConstants;
@@ -17,9 +18,12 @@ import android.media.SoundPool;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.RemoteViews;
 
 import com.google.android.glass.timeline.LiveCard;
+import com.google.android.glass.widget.CardBuilder;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,7 +37,7 @@ public class FlashlightService extends Service {
     private static final String LIVE_CARD_TAG = "flashlight";
     private static final String ACTION_USB_PERMISSION = "com.deqing.usb_flashlight_glass.USB_PERMISSION";
     private LiveCard mLiveCard;
-    private RemoteViews mLiveCardView,mLiveCardLoadingView;
+    private RemoteViews mLiveCardView, mLiveCardLoadingView;
     private UsbManager mUsbManager;
     private UsbDevice mFlashlight;
     private boolean mIsFlashlightOn = false;
@@ -46,10 +50,10 @@ public class FlashlightService extends Service {
                     UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
                     if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                         Log.d(TAG, "GOT Permission!");
-                        toggle_flashlight(true,true);	//turn on flashlight
+                        toggle_flashlight(true, true);    //turn on flashlight
                     } else {
                         mIsFlashlightOn = false;
-                        updateStatus(R.string.connection_failed,R.drawable.ic_flashlight_150_err);
+                        updateStatus(R.string.connection_failed, R.drawable.ic_flashlight_150_err);
                         Log.e(TAG, "permission denied for device " + device);
                     }
                 }
@@ -105,30 +109,33 @@ public class FlashlightService extends Service {
         if (mFlashlight == null) {
             mIsFlashlightOn = false;
             Log.w(TAG, "NOT GOT DEVICE!!");
-            updateStatus(R.string.device_not_found,R.drawable.ic_flashlight_150_err);
+            updateStatus(R.string.device_not_found, R.drawable.ic_flashlight_150_err);
             return;
         }
         Log.d(TAG, "GOT DEVICE!");
         if (mUsbManager.hasPermission(mFlashlight)) {
-        	toggle_flashlight(true,true);	//turn on flashlight
+            toggle_flashlight(true, true);    //turn on flashlight
         } else {
             mUsbManager.requestPermission(mFlashlight, mPermissionIntent);
         }
     }
-    
-    public void toggle_flashlight() {	//toggle flashlight
-    	if (mIsFlashlightOn){
-    		toggle_flashlight(true,false);	
-    	}else{
-    		toggle_flashlight(true,true);	
-    	}
+
+    public void toggle_flashlight() {    //toggle flashlight
+        if (mIsFlashlightOn) {
+            toggle_flashlight(true, false);
+        } else {
+            toggle_flashlight(true, true);
+        }
     }
 
-    public void toggle_flashlight(boolean cmd_specified,boolean cmd_on) {
-        if (mFlashlight == null) return;
+    public void toggle_flashlight(boolean cmd_specified, boolean cmd_on) {
+        if (mFlashlight == null) {
+            updateStatus(R.string.device_not_found, R.drawable.ic_flashlight_150_err);
+            return;
+        }
         if (!mUsbManager.hasPermission(mFlashlight)) {
             Log.e(TAG, "No permission to toggle flashlight");
-            updateStatus(R.string.connection_failed,R.drawable.ic_flashlight_150_err);
+            updateStatus(R.string.connection_failed, R.drawable.ic_flashlight_150_err);
             return;
         }
         Log.d(TAG, "There are " + mFlashlight.getInterfaceCount() + " interfaces.");
@@ -144,25 +151,25 @@ public class FlashlightService extends Service {
             }
         }
         if (out_endpoint != null) {
-        	int TIMEOUT = 0;
-        	byte[] bytes={(byte) 'F',(byte) 'T'};
-        	if (cmd_specified){
-        		if (cmd_on){
-        			bytes[1]=(byte) 'O';
-        			mIsFlashlightOn = true;
-        		}else{
-        			bytes[1]=(byte) 'F';
-        			mIsFlashlightOn = false;
-        		}
-        	}else{
-        		mIsFlashlightOn = !mIsFlashlightOn;
-        	}
+            int TIMEOUT = 0;
+            byte[] bytes = {(byte) 'F', (byte) 'T'};
+            if (cmd_specified) {
+                if (cmd_on) {
+                    bytes[1] = (byte) 'O';
+                    mIsFlashlightOn = true;
+                } else {
+                    bytes[1] = (byte) 'F';
+                    mIsFlashlightOn = false;
+                }
+            } else {
+                mIsFlashlightOn = !mIsFlashlightOn;
+            }
             usb_connection.bulkTransfer(out_endpoint, bytes, 2, TIMEOUT);
             Log.d(TAG, "Flashlight toggled");
-            if (mIsFlashlightOn){
-            	updateStatus(R.string.flashlight_enabled,R.drawable.ic_flashlight_150_on);
-            }else{
-            	updateStatus(R.string.flashlight_disabled,R.drawable.ic_flashlight_150_off);
+            if (mIsFlashlightOn) {
+                updateStatus(R.string.flashlight_enabled, R.drawable.ic_flashlight_150_on);
+            } else {
+                updateStatus(R.string.flashlight_disabled, R.drawable.ic_flashlight_150_off);
             }
             mSoundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
             mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
@@ -176,18 +183,24 @@ public class FlashlightService extends Service {
         } else {
             mIsFlashlightOn = false;
             Log.e(TAG, "Out endpoint not found");
-            updateStatus(R.string.connection_failed,R.drawable.ic_flashlight_150_err);
+            updateStatus(R.string.connection_failed, R.drawable.ic_flashlight_150_err);
         }
         usb_connection.close();
         usb_connection.releaseInterface(intf);
     }
 
-    private void updateStatus(int statusResId,int imageResId) {
+    private void updateStatus(int statusResId, int imageResId) {
         if (mLiveCardView != null && mLiveCard != null && mLiveCard.isPublished()) {
-            mLiveCardView.setTextViewText(R.id.status, getString(statusResId));
-            mLiveCardView.setImageViewResource (R.id.imageStatus, imageResId);
-            mLiveCard.setViews(mLiveCardView);
-            mLiveCard.setVoiceActionEnabled(true);
+            if (statusResId == R.string.device_not_found) {
+                AlertDialog alertDialog = new AlertDialog(getApplicationContext(), R.drawable.ic_cloud_sad_150, R.string.device_not_found, R.string.device_not_found_foot_note, mOnClickListener);
+                alertDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+                alertDialog.show();
+            } else {
+                mLiveCardView.setTextViewText(R.id.status, getString(statusResId));
+                mLiveCardView.setImageViewResource(R.id.imageStatus, imageResId);
+                mLiveCard.setViews(mLiveCardView);
+                mLiveCard.setVoiceActionEnabled(true);
+            }
         }
     }
 
@@ -195,7 +208,7 @@ public class FlashlightService extends Service {
     public void onDestroy() {
         unregisterReceiver(mUsbReceiver);
         if (mIsFlashlightOn) {
-            toggle_flashlight(true,false); 	//turn off flashlight
+            toggle_flashlight(true, false);    //turn off flashlight
         }
         if (mLiveCard != null && mLiveCard.isPublished()) {
             mLiveCard.unpublish();
@@ -219,9 +232,18 @@ public class FlashlightService extends Service {
         public boolean isFlashlightOn() {
             return mIsFlashlightOn;
         }
-        
+
         public void setToggleFlashlight() {
-        	toggle_flashlight();
+            toggle_flashlight();
         }
     }
+
+    private final DialogInterface.OnClickListener mOnClickListener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int button) {
+            // TODO: Take action to respond to the tap.
+        }
+    };
+
+
 }
