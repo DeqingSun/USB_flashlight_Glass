@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/overAllLayout"
     >
 
     <RelativeLayout
@@ -34,7 +35,7 @@
         android:layout_marginTop="@dimen/glass_card_margin"
         android:layout_toRightOf="@+id/left_column"
         tools:ignore="UselessLeaf"
-        >
+        android:id="@+id/relativeLayout">
 
         <TextView
         android:id="@+id/status"
@@ -88,5 +89,16 @@
             />
 
     </LinearLayout>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/logoImageView"
+        android:src="@drawable/ic_flashlight_30"
+        android:contentDescription="@string/ic_logo_description"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="40dp"
+        android:layout_marginBottom="34dp" />
 
 </RelativeLayout>

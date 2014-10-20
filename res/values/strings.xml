@@ -17,4 +17,5 @@
     <string name="menu_stop_off_description">Turn off the flashlight and exit</string>
     <string name="menu_stop_description">Exit Glassware</string>
     <string name="ic_big_description">Image show on/off</string>
+    <string name="ic_logo_description">App logo</string>
 </resources>
