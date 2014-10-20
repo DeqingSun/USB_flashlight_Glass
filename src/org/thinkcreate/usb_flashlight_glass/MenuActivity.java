@@ -1,4 +1,4 @@
-package com.deqing.usb_flashlight_glass;
+package org.thinkcreate.usb_flashlight_glass;
 
 import android.app.Activity;
 import android.content.ComponentName;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
-    package="com.deqing.usb_flashlight_glass"
+    package="org.thinkcreate.usb_flashlight_glass"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:versionCode="3"
     android:versionName="1.15">
@@ -15,10 +15,10 @@
         android:icon="@drawable/ic_flashlight"
         android:label="@string/app_name">
         <activity
-            android:name="com.deqing.usb_flashlight_glass.MenuActivity"
+            android:name="org.thinkcreate.usb_flashlight_glass.MenuActivity"
             android:theme="@style/MenuTheme"/>
         <service
-            android:name="com.deqing.usb_flashlight_glass.FlashlightService"
+            android:name="org.thinkcreate.usb_flashlight_glass.FlashlightService"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.google.android.glass.action.VOICE_TRIGGER"/>

@@ -1,4 +1,4 @@
-package com.deqing.usb_flashlight_glass;
+package org.thinkcreate.usb_flashlight_glass;
 
 import android.app.PendingIntent;
 import android.app.Service;
@@ -35,7 +35,7 @@ import java.util.Iterator;
 public class FlashlightService extends Service {
     private static final String TAG = FlashlightService.class.getSimpleName();
     private static final String LIVE_CARD_TAG = "flashlight";
-    private static final String ACTION_USB_PERMISSION = "com.deqing.usb_flashlight_glass.USB_PERMISSION";
+    private static final String ACTION_USB_PERMISSION = "org.thinkcreate.usb_flashlight_glass.USB_PERMISSION";
     private LiveCard mLiveCard;
     private RemoteViews mLiveCardView, mLiveCardLoadingView;
     private UsbManager mUsbManager;
