@@ -45,6 +45,7 @@ public class FlashlightService extends Service {
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+            System.out.println(action);
             if (ACTION_USB_PERMISSION.equals(action)) {
                 synchronized (this) {
                     UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
@@ -57,6 +58,8 @@ public class FlashlightService extends Service {
                         Log.e(TAG, "permission denied for device " + device);
                     }
                 }
+            }else if(UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action) || UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+                search_usb_device();
             }
         }
     };
@@ -68,6 +71,8 @@ public class FlashlightService extends Service {
         mUsbManager = (UsbManager) getSystemService(USB_SERVICE);
         mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(mUsbReceiver, filter);
     }
 
@@ -93,6 +98,7 @@ public class FlashlightService extends Service {
     }
 
     public void search_usb_device() {
+        mFlashlight = null;
         HashMap<String, UsbDevice> deviceList = mUsbManager.getDeviceList();
         Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
         Log.d(TAG, deviceList.toString());
