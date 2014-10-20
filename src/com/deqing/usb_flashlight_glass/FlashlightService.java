@@ -33,7 +33,7 @@ public class FlashlightService extends Service {
     private static final String LIVE_CARD_TAG = "flashlight";
     private static final String ACTION_USB_PERMISSION = "com.deqing.usb_flashlight_glass.USB_PERMISSION";
     private LiveCard mLiveCard;
-    private RemoteViews mLiveCardView;
+    private RemoteViews mLiveCardView,mLiveCardLoadingView;
     private UsbManager mUsbManager;
     private UsbDevice mFlashlight;
     private boolean mIsFlashlightOn = false;
@@ -72,8 +72,8 @@ public class FlashlightService extends Service {
         if (mLiveCard == null) {
             mLiveCard = new LiveCard(this, LIVE_CARD_TAG);
             mLiveCardView = new RemoteViews(getPackageName(), R.layout.flashlight);
-            mLiveCard.setViews(mLiveCardView);
-            mLiveCard.setVoiceActionEnabled(true);
+            mLiveCardLoadingView = new RemoteViews(getPackageName(), R.layout.loadinglayout);
+            mLiveCard.setViews(mLiveCardLoadingView);
             // Create the required menu activity intent
             Intent menuIntent = new Intent(this, MenuActivity.class);
             menuIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -187,6 +187,7 @@ public class FlashlightService extends Service {
             mLiveCardView.setTextViewText(R.id.status, getString(statusResId));
             mLiveCardView.setImageViewResource (R.id.imageStatus, imageResId);
             mLiveCard.setViews(mLiveCardView);
+            mLiveCard.setVoiceActionEnabled(true);
         }
     }
 
