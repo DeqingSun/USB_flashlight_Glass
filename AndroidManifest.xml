@@ -2,7 +2,7 @@
 <manifest
     package="org.thinkcreate.usb_flashlight_glass"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:versionCode="4"
+    android:versionCode="5"
     android:versionName="XE22">
 
     <uses-sdk
