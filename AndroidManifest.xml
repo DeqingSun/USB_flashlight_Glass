@@ -16,6 +16,8 @@
         <activity
             android:name="org.thinkcreate.usb_flashlight_glass.MenuActivity"
             android:theme="@style/MenuTheme"/>
+        <activity
+            android:name="org.thinkcreate.usb_flashlight_glass.AlertActivity"/>
         <service
             android:name="org.thinkcreate.usb_flashlight_glass.FlashlightService"
             android:exported="true">

@@ -37,7 +37,7 @@ public class FlashlightService extends Service {
     private static final String LIVE_CARD_TAG = "flashlight";
     private static final String ACTION_USB_PERMISSION = "org.thinkcreate.usb_flashlight_glass.USB_PERMISSION";
     private LiveCard mLiveCard;
-    private RemoteViews mLiveCardView, mLiveCardLoadingView, mLiveCardAlertView;
+    private RemoteViews mLiveCardView, mLiveCardLoadingView;
     private UsbManager mUsbManager;
     private UsbDevice mFlashlight;
     private boolean mIsFlashlightOn = false;
@@ -83,11 +83,6 @@ public class FlashlightService extends Service {
             mLiveCardView = new RemoteViews(getPackageName(), R.layout.flashlight);
             mLiveCardLoadingView = new RemoteViews(getPackageName(), R.layout.loadinglayout);
             mLiveCard.setViews(mLiveCardLoadingView);
-            CardBuilder alertCardBuilder = new CardBuilder(this, CardBuilder.Layout.ALERT);
-            alertCardBuilder.setIcon(R.drawable.ic_cloud_sad_150);
-            alertCardBuilder.setText(R.string.device_not_found);
-            alertCardBuilder.setFootnote(R.string.device_not_found_foot_note);
-            mLiveCardAlertView = alertCardBuilder.getRemoteViews();
             // Create the required menu activity intent
             Intent menuIntent = new Intent(this, MenuActivity.class);
             menuIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -203,7 +198,9 @@ public class FlashlightService extends Service {
     private void updateStatus(int statusResId, int imageResId) {
         if (mLiveCardView != null && mLiveCard != null && mLiveCard.isPublished()) {
             if (statusResId == R.string.device_not_found) {
-                mLiveCard.setViews(mLiveCardAlertView);
+                Intent alertIntent = new Intent(this, AlertActivity.class);
+                alertIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                this.startActivity(alertIntent);
             } else {
                 mLiveCardView.setTextViewText(R.id.status, getString(statusResId));
                 mLiveCardView.setImageViewResource(R.id.imageStatus, imageResId);
