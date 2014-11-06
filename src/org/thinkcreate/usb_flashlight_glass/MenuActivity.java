@@ -75,17 +75,7 @@ public class MenuActivity extends Activity {
                 stop.setTitle(R.string.menu_stop_voice_command);
             }
 
-            if (isFlashlightOn || (mFlashlightService==null)) {
-                if (mFromLiveCardVoice){
-                    toggle.setTitle(R.string.menu_off_voice_command);
-                    stop.setTitle(R.string.menu_stop_voice_command);
-                }else {
-                    MenuUtils.setDescription(stop, R.string.menu_stop_off_description);
-                    toggle.setTitle(R.string.menu_off);
-                    stop.setTitle(R.string.menu_stop);
-                    toggle.setIcon(R.drawable.ic_flashlight_50_off);
-                }
-            } else {
+            if (!isFlashlightOn || (mFlashlightService==null)) {
                 if (mFromLiveCardVoice){
                     toggle.setTitle(R.string.menu_on_voice_command);
                     stop.setTitle(R.string.menu_stop_voice_command);
@@ -94,6 +84,16 @@ public class MenuActivity extends Activity {
                     toggle.setTitle(R.string.menu_on);
                     stop.setTitle(R.string.menu_stop);
                     toggle.setIcon(R.drawable.ic_flashlight_50_on);
+                }
+            } else {
+                if (mFromLiveCardVoice){
+                    toggle.setTitle(R.string.menu_off_voice_command);
+                    stop.setTitle(R.string.menu_stop_voice_command);
+                }else {
+                    MenuUtils.setDescription(stop, R.string.menu_stop_off_description);
+                    toggle.setTitle(R.string.menu_off);
+                    stop.setTitle(R.string.menu_stop);
+                    toggle.setIcon(R.drawable.ic_flashlight_50_off);
                 }
             }
             return true;
