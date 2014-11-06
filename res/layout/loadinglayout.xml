@@ -13,14 +13,4 @@
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />
 
-    <ProgressBar
-        android:id="@+id/someProgressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:indeterminate="true"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:indeterminateDrawable="@drawable/glass_progress_indeterminate_horizontal"
-        />
-
 </RelativeLayout>
