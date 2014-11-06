@@ -23,11 +23,12 @@ import com.google.android.glass.view.WindowUtils;
 public class MenuActivity extends Activity {
     private final Handler mHandler = new Handler();
     private boolean isFlashlightOn;
+    private MenuItem mToggleItem = null;
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             if (service instanceof FlashlightService.FlashlightBinder) {
-                isFlashlightOn = ((FlashlightService.FlashlightBinder) service).isFlashlightOn();
+                //isFlashlightOn = ((FlashlightService.FlashlightBinder) service).isFlashlightOn();
                 mFlashlightService=((FlashlightService.FlashlightBinder) service);
             }
         }
@@ -53,6 +54,7 @@ public class MenuActivity extends Activity {
             getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
         }
         bindService(new Intent(this, FlashlightService.class), mConnection, 0);
+        isFlashlightOn = getIntent().getBooleanExtra("flashlightIsOn",false);
     }
 
     @Override
@@ -75,7 +77,7 @@ public class MenuActivity extends Activity {
                 stop.setTitle(R.string.menu_stop_voice_command);
             }
 
-            if (!isFlashlightOn || (mFlashlightService==null)) {
+            if (!isFlashlightOn) {
                 if (mFromLiveCardVoice){
                     toggle.setTitle(R.string.menu_on_voice_command);
                     stop.setTitle(R.string.menu_stop_voice_command);

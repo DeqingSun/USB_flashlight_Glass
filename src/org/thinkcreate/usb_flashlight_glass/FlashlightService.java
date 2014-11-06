@@ -16,6 +16,7 @@ import android.hardware.usb.UsbManager;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
@@ -42,6 +43,7 @@ public class FlashlightService extends Service {
     private UsbDevice mFlashlight;
     private boolean mIsFlashlightOn = false;
     private SoundPool mSoundPool;
+    private Intent mMenuIntent;
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -54,6 +56,7 @@ public class FlashlightService extends Service {
                         toggle_flashlight(true, true);    //turn on flashlight
                     } else {
                         mIsFlashlightOn = false;
+                        updateFlashlightMenu();
                         updateStatus(R.string.connection_failed, R.drawable.ic_flashlight_150_err);
                         Log.e(TAG, "permission denied for device " + device);
                     }
@@ -84,9 +87,9 @@ public class FlashlightService extends Service {
             mLiveCardLoadingView = new RemoteViews(getPackageName(), R.layout.loadinglayout);
             mLiveCard.setViews(mLiveCardLoadingView);
             // Create the required menu activity intent
-            Intent menuIntent = new Intent(this, MenuActivity.class);
-            menuIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            mLiveCard.setAction(PendingIntent.getActivity(this, 0, menuIntent, 0));
+            mMenuIntent = new Intent(this, MenuActivity.class);
+            mMenuIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            updateFlashlightMenu();
             // Publish the live card
             mLiveCard.publish(LiveCard.PublishMode.REVEAL);
             // Start the search for already attached devices
@@ -114,6 +117,7 @@ public class FlashlightService extends Service {
         }
         if (mFlashlight == null) {
             mIsFlashlightOn = false;
+            updateFlashlightMenu();
             Log.w(TAG, "NOT GOT DEVICE!!");
             updateStatus(R.string.device_not_found, R.drawable.ic_flashlight_150_err);
             return;
@@ -163,12 +167,15 @@ public class FlashlightService extends Service {
                 if (cmd_on) {
                     bytes[1] = (byte) 'O';
                     mIsFlashlightOn = true;
+                    updateFlashlightMenu();
                 } else {
                     bytes[1] = (byte) 'F';
                     mIsFlashlightOn = false;
+                    updateFlashlightMenu();
                 }
             } else {
                 mIsFlashlightOn = !mIsFlashlightOn;
+                updateFlashlightMenu();
             }
             usb_connection.bulkTransfer(out_endpoint, bytes, 2, TIMEOUT);
             Log.d(TAG, "Flashlight toggled");
@@ -188,6 +195,7 @@ public class FlashlightService extends Service {
             mSoundPool.load(this, soundResId, 0);
         } else {
             mIsFlashlightOn = false;
+            updateFlashlightMenu();
             Log.e(TAG, "Out endpoint not found");
             updateStatus(R.string.connection_failed, R.drawable.ic_flashlight_150_err);
         }
@@ -210,6 +218,11 @@ public class FlashlightService extends Service {
                 mLiveCard.setVoiceActionEnabled(true);
             }
         }
+    }
+
+    private void updateFlashlightMenu(){
+        mMenuIntent.putExtra("flashlightIsOn", mIsFlashlightOn);
+        mLiveCard.setAction(PendingIntent.getActivity(this, 0, mMenuIntent, PendingIntent.FLAG_UPDATE_CURRENT));
     }
 
     @Override
