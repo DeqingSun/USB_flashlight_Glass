@@ -22,8 +22,7 @@ import com.google.android.glass.view.WindowUtils;
  */
 public class MenuActivity extends Activity {
     private final Handler mHandler = new Handler();
-    private boolean isFlashlightOn;
-    private MenuItem mToggleItem = null;
+    private boolean isFlashlightOn,isFlashlightConnected;
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -55,6 +54,7 @@ public class MenuActivity extends Activity {
         }
         bindService(new Intent(this, FlashlightService.class), mConnection, 0);
         isFlashlightOn = getIntent().getBooleanExtra("flashlightIsOn",false);
+        isFlashlightConnected =  getIntent().getBooleanExtra("flashlightIsConnected",false);
     }
 
     @Override
@@ -72,6 +72,9 @@ public class MenuActivity extends Activity {
 
             MenuItem stop = menu.findItem(R.id.menu_stop);
             MenuItem toggle = menu.findItem(R.id.menu_toggle);
+
+            toggle.setVisible(isFlashlightConnected);
+
             if (mFromLiveCardVoice){
                 toggle.setTitle(R.string.menu_off_voice_command);
                 stop.setTitle(R.string.menu_stop_voice_command);
@@ -82,7 +85,7 @@ public class MenuActivity extends Activity {
                     toggle.setTitle(R.string.menu_on_voice_command);
                     stop.setTitle(R.string.menu_stop_voice_command);
                 }else {
-                    MenuUtils.setDescription(stop, R.string.menu_stop_off_description);
+                    if (isFlashlightConnected) MenuUtils.setDescription(stop, R.string.menu_stop_off_description);
                     toggle.setTitle(R.string.menu_on);
                     stop.setTitle(R.string.menu_stop);
                     toggle.setIcon(R.drawable.ic_flashlight_50_on);
@@ -92,7 +95,7 @@ public class MenuActivity extends Activity {
                     toggle.setTitle(R.string.menu_off_voice_command);
                     stop.setTitle(R.string.menu_stop_voice_command);
                 }else {
-                    MenuUtils.setDescription(stop, R.string.menu_stop_off_description);
+                    if (isFlashlightConnected) MenuUtils.setDescription(stop, R.string.menu_stop_off_description);
                     toggle.setTitle(R.string.menu_off);
                     stop.setTitle(R.string.menu_stop);
                     toggle.setIcon(R.drawable.ic_flashlight_50_off);

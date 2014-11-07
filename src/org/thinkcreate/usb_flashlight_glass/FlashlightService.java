@@ -115,6 +115,7 @@ public class FlashlightService extends Service {
                 break;
             }
         }
+        updateFlashlightMenu();//update if flashlight is connected
         if (mFlashlight == null) {
             mIsFlashlightOn = false;
             updateFlashlightMenu();
@@ -224,6 +225,7 @@ public class FlashlightService extends Service {
 
     private void updateFlashlightMenu(){
         mMenuIntent.putExtra("flashlightIsOn", mIsFlashlightOn);
+        mMenuIntent.putExtra("flashlightIsConnected", (mFlashlight != null));
         mLiveCard.setAction(PendingIntent.getActivity(this, 0, mMenuIntent, PendingIntent.FLAG_UPDATE_CURRENT));
     }
 
