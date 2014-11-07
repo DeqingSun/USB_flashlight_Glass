@@ -206,11 +206,13 @@ public class FlashlightService extends Service {
     private void updateStatus(int statusResId, int imageResId) {
         if (mLiveCardView != null && mLiveCard != null && mLiveCard.isPublished()) {
             if (statusResId == R.string.device_not_found) {
-                mLiveCard.setViews(mLiveCardLoadingView);
                 mLiveCard.setVoiceActionEnabled(false);
                 Intent alertIntent = new Intent(this, AlertActivity.class);
                 alertIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 this.startActivity(alertIntent);
+                mLiveCardView.setTextViewText(R.id.status, getString(R.string.device_not_found_state));
+                mLiveCardView.setImageViewResource(R.id.imageStatus, imageResId);
+                mLiveCard.setViews(mLiveCardView);
             } else {
                 mLiveCardView.setTextViewText(R.id.status, getString(statusResId));
                 mLiveCardView.setImageViewResource(R.id.imageStatus, imageResId);

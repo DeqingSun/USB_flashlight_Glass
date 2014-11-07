@@ -21,38 +21,11 @@ public class AlertActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         mAlertCard =  new CardBuilder(this, CardBuilder.Layout.ALERT);
-        mAlertCard.setIcon(R.drawable.ic_cloud_sad_150);
+        mAlertCard.setIcon(R.drawable.ic_warning_150);
         mAlertCard.setText(R.string.device_not_found);
         mAlertCard.setFootnote(R.string.device_not_found_foot_note);
         View card_view=mAlertCard.getView ();
 
         setContentView(card_view);
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
-            openOptionsMenu();
-            return true;
-        }
-        return super.onKeyDown(keyCode, event);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.alertmenu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_dismiss:
-                finish();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
     }
 }
